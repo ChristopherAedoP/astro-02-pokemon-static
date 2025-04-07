@@ -1,5 +1,6 @@
 ---
 import PokemonCard from '@components/pokemons/PokemonCard.astro';
+import Title from '@components/shared/Title.astro';
 import type { PokemonListResponse } from '@interfaces/pokemon-list.response';
 import MainLayout from '@layouts/MainLayout.astro';
 
@@ -10,7 +11,7 @@ const data = (await resp.json()) as PokemonListResponse;
 ---
 
 <MainLayout title={title}>
-	<h1 class="text-3xl">Listado de Pokémon</h1>
+	<Title> Listado </Title>
 	<hr />
 	<section
 		aria-label="Listado de Pokémon"

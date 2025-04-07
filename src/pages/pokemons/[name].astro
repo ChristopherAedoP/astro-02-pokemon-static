@@ -3,7 +3,9 @@ import type { GetStaticPaths } from 'astro';
 import MainLayout from '@layouts/MainLayout.astro';
 import PokemonCard from '@components/pokemons/PokemonCard.astro';
 import type { PokemonListResponse } from '@interfaces/pokemon-list.response';
-
+import Title from '@components/shared/Title.astro';
+import { Icon } from 'astro-icon/components';
+import { bigint } from 'astro/zod';
 // export const getStaticPaths = (() => {
 // 	return [
 // 		{
@@ -38,10 +40,27 @@ const imageSrc = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprit
 	description=`Informacion sobre el pokémon ${name}`
 	image={imageSrc}>
 	<section class="mt-10 mx-10 flex flex-col justify-center items-center">
-		<div>
-			<a href="/">Regresar</a>
-			<!-- <h1 class="text-3xl capitalize">{name}</h1> -->
+		<div class="flex flex-row">
+			<div>
+				<!-- <a href="/">Regresar</a> -->
+				<button class="text-blue-500" onclick="history.back()">
+					Regresar
+				</button>
+				<Title> {name} </Title>
+			</div>
+
+			<button id="btn-favorite" class="ml-4" data-name={name} data-id={id}>
+				<Icon data-outline name="heart-empy" size={50} />
+				<Icon
+					data-full
+					class="hidden"
+					name="heart-full"
+					size={50}
+					color="red"
+				/>
+			</button>
 		</div>
+
 		<PokemonCard name={name} url={url} isBig />
 
 		<audio controls class="mt-5">
@@ -50,8 +69,98 @@ const imageSrc = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprit
 	</section>
 </MainLayout>
 
+<script>
+	import type { FavoritePokemon } from "@interfaces/favorite-pokemon";
+
+	const handlePageLoad = () => {
+		let favoritePokemons: FavoritePokemon[] = [];
+		const favoritePokemonsString = localStorage.getItem('favoritePokemons');
+		if (favoritePokemonsString) {
+			favoritePokemons = JSON.parse(favoritePokemonsString);
+		}
+		console.log({ favoritePokemons });
+
+		const btnFavorite = document.querySelector(
+			'#btn-favorite'
+		) as HTMLButtonElement;
+
+		if (!btnFavorite) return;
+
+		const name = btnFavorite.dataset.name ?? '';
+		const id = btnFavorite.dataset.id ?? '';
+		const isFavorite = favoritePokemons.some(
+			(pokemon) => pokemon.name === name
+		);
+
+		const heartOutLine = btnFavorite.querySelector(
+			'[data-outline]'
+		) as HTMLButtonElement;
+
+		const heartFull = btnFavorite.querySelector(
+			'[data-full]'
+		) as HTMLButtonElement;
+
+		//buscar si existe el pokemon en favoritos
+		if (isFavorite) {
+			heartOutLine.classList.add('hidden');
+			heartFull.classList.remove('hidden');
+		} else {
+			heartOutLine.classList.remove('hidden');
+			heartFull.classList.add('hidden');
+		}
+
+		const toggleFavorite = () => {
+			const isFavorite = favoritePokemons.some(
+				(pokemon) => pokemon.name === name
+			);
+
+			if (isFavorite) {
+				//remove
+				favoritePokemons = favoritePokemons.filter(
+					(pokemon) => pokemon.name !== name
+				);
+			} else {
+				favoritePokemons.push({ name, id: +id });
+			}
+
+			localStorage.setItem(
+				'favoritePokemons',
+				JSON.stringify(favoritePokemons)
+			);
+		};
+
+		btnFavorite.addEventListener('click', () => {
+			heartOutLine.classList.toggle('hidden');
+			heartFull.classList.toggle('hidden');
+			toggleFavorite();
+		});
+
+	};
+
+	// document.addEventListener('astro:before-preparation', () => {
+	// 	console.log('astro:before-preparation');
+	// });
+	// document.addEventListener('astro:after-preparation', () => {
+	// 	console.log('astro:after-preparation');
+	// });
+	// document.addEventListener('astro:before-swap', () => {
+	// 	console.log('astro:before-swap');
+	// });
+	// document.addEventListener('astro:after-swap', () => {
+	// 	console.log('astro:after-swap');
+	// });
+	// document.addEventListener('astro:page-load', () => {
+	// 	console.log('astro:page-load');
+	// });
+
+	document.addEventListener('astro:page-load', handlePageLoad);
+</script>
+
 <style>
 	a {
 		@apply hover:underline text-blue-500;
+	}
+	#btn-favorite {
+		@apply hover:animate-pulse;
 	}
 </style>
